@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CheckQualityService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bqatsdk-services</a> &gt; <a href="index.source.html" class="el_package">io.bqat.sdk.services.service</a> &gt; <span class="el_source">CheckQualityService.java</span></div><h1>CheckQualityService.java</h1><pre class="source lang-java linenums">package io.bqat.sdk.services.service;
+
+import static io.bqat.sdk.services.constant.AppConstants.LOGGER_IDTYPE;
+import static io.bqat.sdk.services.constant.AppConstants.LOGGER_SESSIONID;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import io.bqat.sdk.services.constant.ResponseStatus;
+import io.bqat.sdk.services.dto.BqatRequestDto;
+import io.bqat.sdk.services.dto.SettingsDto;
+import io.bqat.sdk.services.exceptions.BqatSdkException;
+import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
+import io.mosip.kernel.biometrics.model.QualityCheck;
+import io.mosip.kernel.biometrics.model.QualityScore;
+import io.mosip.kernel.biometrics.model.Response;
+import lombok.extern.slf4j.Slf4j;
+
+<span class="fc" id="L27">@Slf4j</span>
+public class CheckQualityService extends SDKService {	
+	private SettingsDto settingsDto;
+
+	private BiometricRecord sample;
+	private List&lt;BiometricType&gt; modalitiesToCheck;
+	private Map&lt;String, String&gt; flags;
+
+    private SDKServiceHelper serviceHelper;
+	
+	public CheckQualityService(BiometricRecord sample, List&lt;BiometricType&gt; modalitiesToCheck,
+<span class="fc" id="L38">			Map&lt;String, String&gt; flags, SettingsDto settingsDto) {</span>
+<span class="fc" id="L39">		this.sample = sample;</span>
+<span class="fc" id="L40">		this.modalitiesToCheck = modalitiesToCheck;</span>
+<span class="fc" id="L41">		this.flags = flags;</span>
+<span class="fc" id="L42">		this.settingsDto = settingsDto;</span>
+		
+<span class="fc" id="L44">		serviceHelper = new SDKServiceHelper(settingsDto);</span>
+<span class="fc" id="L45">	}</span>
+
+	public Response&lt;QualityCheck&gt; getCheckQualityInfo() {
+<span class="fc" id="L48">		ResponseStatus responseStatus = null;</span>
+<span class="fc" id="L49">		Map&lt;BiometricType, QualityScore&gt; scores = null;</span>
+<span class="fc" id="L50">		Response&lt;QualityCheck&gt; response = new Response&lt;&gt;();</span>
+		try {
+<span class="pc bpc" id="L52" title="3 of 6 branches missed.">			if (sample == null || sample.getSegments() == null || sample.getSegments().isEmpty()) {</span>
+<span class="nc" id="L53">				responseStatus = ResponseStatus.MISSING_INPUT;</span>
+<span class="nc" id="L54">				throw new BqatSdkException(responseStatus.getStatusCode() + &quot;&quot;, responseStatus.getStatusMessage());</span>
+			}
+
+<span class="fc" id="L57">			scores = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L58">			Map&lt;BiometricType, List&lt;BIR&gt;&gt; segmentMap = getBioSegmentMap(sample, modalitiesToCheck);</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">			for (BiometricType modality : segmentMap.keySet()) {</span>
+<span class="nc" id="L60">				QualityScore qualityScore = evaluateQuality(modality, segmentMap.get(modality));</span>
+<span class="nc" id="L61">				scores.put(modality, qualityScore);</span>
+<span class="nc" id="L62">			}</span>
+<span class="nc" id="L63">		} catch (BqatSdkException ex) {</span>
+<span class="nc" id="L64">			log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;checkQuality -- error&quot;, ex);</span>
+<span class="nc bnc" id="L65" title="All 7 branches missed.">			switch (ResponseStatus.fromStatusCode(Integer.parseInt(ex.getErrorCode()))) {</span>
+			case INVALID_INPUT:
+<span class="nc" id="L67">				response.setStatusCode(ResponseStatus.INVALID_INPUT.getStatusCode());</span>
+<span class="nc" id="L68">				response.setStatusMessage(String.format(ResponseStatus.INVALID_INPUT.getStatusMessage() + &quot; sample&quot;));</span>
+<span class="nc" id="L69">				response.setResponse(null);</span>
+<span class="nc" id="L70">				return response;</span>
+			case MISSING_INPUT:
+<span class="nc" id="L72">				response.setStatusCode(ResponseStatus.MISSING_INPUT.getStatusCode());</span>
+<span class="nc" id="L73">				response.setStatusMessage(String.format(ResponseStatus.MISSING_INPUT.getStatusMessage() + &quot; sample&quot;));</span>
+<span class="nc" id="L74">				response.setResponse(null);</span>
+<span class="nc" id="L75">				return response;</span>
+			case QUALITY_CHECK_FAILED:
+<span class="nc" id="L77">				response.setStatusCode(ResponseStatus.QUALITY_CHECK_FAILED.getStatusCode());</span>
+<span class="nc" id="L78">				response.setStatusMessage(String.format(ResponseStatus.QUALITY_CHECK_FAILED.getStatusMessage() + &quot;&quot;));</span>
+<span class="nc" id="L79">				response.setResponse(null);</span>
+<span class="nc" id="L80">				return response;</span>
+			case BIOMETRIC_NOT_FOUND_IN_CBEFF:
+<span class="nc" id="L82">				response.setStatusCode(ResponseStatus.BIOMETRIC_NOT_FOUND_IN_CBEFF.getStatusCode());</span>
+<span class="nc" id="L83">				response.setStatusMessage(</span>
+<span class="nc" id="L84">						String.format(ResponseStatus.BIOMETRIC_NOT_FOUND_IN_CBEFF.getStatusMessage() + &quot;&quot;));</span>
+<span class="nc" id="L85">				response.setResponse(null);</span>
+<span class="nc" id="L86">				return response;</span>
+			case MATCHING_OF_BIOMETRIC_DATA_FAILED:
+<span class="nc" id="L88">				response.setStatusCode(ResponseStatus.MATCHING_OF_BIOMETRIC_DATA_FAILED.getStatusCode());</span>
+<span class="nc" id="L89">				response.setStatusMessage(</span>
+<span class="nc" id="L90">						String.format(ResponseStatus.MATCHING_OF_BIOMETRIC_DATA_FAILED.getStatusMessage() + &quot;&quot;));</span>
+<span class="nc" id="L91">				response.setResponse(null);</span>
+<span class="nc" id="L92">				return response;</span>
+			case POOR_DATA_QUALITY:
+<span class="nc" id="L94">				response.setStatusCode(ResponseStatus.POOR_DATA_QUALITY.getStatusCode());</span>
+<span class="nc" id="L95">				response.setStatusMessage(String.format(ResponseStatus.POOR_DATA_QUALITY.getStatusMessage() + &quot;&quot;));</span>
+<span class="nc" id="L96">				response.setResponse(null);</span>
+<span class="nc" id="L97">				return response;</span>
+			default:
+<span class="nc" id="L99">				response.setStatusCode(ResponseStatus.UNKNOWN_ERROR.getStatusCode());</span>
+<span class="nc" id="L100">				response.setStatusMessage(String.format(ResponseStatus.UNKNOWN_ERROR.getStatusMessage() + &quot;&quot;));</span>
+<span class="nc" id="L101">				response.setResponse(null);</span>
+<span class="nc" id="L102">				return response;</span>
+			}
+<span class="fc" id="L104">		} catch (Exception ex) {</span>
+<span class="fc" id="L105">			log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;checkQuality -- error&quot;, ex);</span>
+<span class="fc" id="L106">			response.setStatusCode(ResponseStatus.UNKNOWN_ERROR.getStatusCode());</span>
+<span class="fc" id="L107">			response.setStatusMessage(String.format(ResponseStatus.UNKNOWN_ERROR.getStatusMessage() + &quot;&quot;));</span>
+<span class="fc" id="L108">			response.setResponse(null);</span>
+<span class="fc" id="L109">			return response;</span>
+<span class="nc" id="L110">		}</span>
+
+<span class="nc" id="L112">		response.setStatusCode(ResponseStatus.SUCCESS.getStatusCode());</span>
+<span class="nc" id="L113">		response.setStatusMessage(ResponseStatus.SUCCESS.getStatusMessage());</span>
+<span class="nc" id="L114">		QualityCheck check = new QualityCheck();</span>
+<span class="nc" id="L115">		check.setScores(scores);</span>
+<span class="nc" id="L116">		response.setResponse(check);</span>
+
+<span class="nc" id="L118">		return response;</span>
+	}
+
+	private QualityScore evaluateQuality(BiometricType modality, List&lt;BIR&gt; segments) {
+<span class="fc" id="L122">		QualityScore score = new QualityScore();</span>
+<span class="fc" id="L123">		List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L124">		score.setScore(0);</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">		switch (modality) {</span>
+		case FACE:
+<span class="nc" id="L127">			return evaluateQuality(segments);</span>
+		case FINGER:
+<span class="nc" id="L129">			return evaluateQuality(segments);</span>
+		case IRIS:
+<span class="nc" id="L131">			return evaluateQuality(segments);</span>
+		default:
+<span class="nc" id="L133">			errors.add(&quot;Modality &quot; + modality.name() + &quot; is not supported&quot;);</span>
+		}
+<span class="nc" id="L135">		score.setErrors(errors);</span>
+<span class="nc" id="L136">		return score;</span>
+	}
+
+	private QualityScore evaluateQuality(List&lt;BIR&gt; segments) {
+<span class="fc" id="L140">		QualityScore score = new QualityScore();</span>
+<span class="fc" id="L141">		score.setAnalyticsInfo(new HashMap&lt;String, String&gt;());</span>
+<span class="fc" id="L142">		List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L143">		setAvgQualityScore(segments, score, errors);</span>
+<span class="nc" id="L144">		score.setErrors(errors);</span>
+<span class="nc" id="L145">		return score;</span>
+	}
+
+	private void setAvgQualityScore(List&lt;BIR&gt; segments, QualityScore score, List&lt;String&gt; errors) {
+<span class="fc" id="L149">		float qualityScore = 0;</span>
+<span class="fc" id="L150">		int segmentCount = 0;</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">		for (BIR segment : segments) {</span>
+<span class="fc" id="L152">			BqatRequestDto requestDto = new BqatRequestDto ();</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">			if (!isValidBirData(segment, requestDto))</span>
+<span class="nc" id="L154">				break;</span>
+<span class="fc" id="L155">			segmentCount++;</span>
+<span class="fc" id="L156">			JSONObject object = serviceHelper.getQualityInfoWithJson(requestDto);</span>
+<span class="nc" id="L157">			Iterator&lt;String&gt; listKEY = object.keys();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		    while (listKEY.hasNext()) {</span>
+<span class="nc" id="L159">		        String key = listKEY.next().toString();</span>
+<span class="nc" id="L160">		        String value = null;</span>
+				try {
+<span class="nc" id="L162">					value = object.get(key).toString();</span>
+<span class="nc" id="L163">			        score.getAnalyticsInfo().put(key, value);</span>
+			        
+<span class="nc bnc" id="L165" title="All 4 branches missed.">			        switch (requestDto.getModality())</span>
+			        {
+				        case &quot;fingerprint&quot;:
+<span class="nc bnc" id="L168" title="All 2 branches missed.">				        	if (key.equalsIgnoreCase(settingsDto.getJsonKeyFingerQualityScore()))</span>
+<span class="nc" id="L169">				        		qualityScore = Float.parseFloat(value);</span>
+				        	break;
+				        case &quot;iris&quot;:
+<span class="nc bnc" id="L172" title="All 2 branches missed.">				        	if (key.equalsIgnoreCase(settingsDto.getJsonKeyIrisQualityScore()))</span>
+<span class="nc" id="L173">				        		qualityScore = Float.parseFloat(value);</span>
+				        	break;
+				        case &quot;face&quot;:
+				        	//TODO : change the keyname once quality is done
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				        	if (key.equalsIgnoreCase(settingsDto.getJsonKeyFaceQualityScore()))</span>
+<span class="nc" id="L178">				        		qualityScore = Float.parseFloat(value);</span>
+				        	break;
+			        	default:
+				        	break;
+			        }
+<span class="nc" id="L183">			        score.setScore(qualityScore);</span>
+<span class="nc" id="L184">				} catch (JSONException e) {</span>
+<span class="nc" id="L185">					errors.add(e.getLocalizedMessage());</span>
+<span class="nc" id="L186">				}</span>
+<span class="nc" id="L187">		    }</span>
+		    break;//one segment data at a time
+		}
+<span class="nc" id="L190">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

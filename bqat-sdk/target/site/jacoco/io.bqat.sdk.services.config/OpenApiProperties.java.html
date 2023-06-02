@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenApiProperties.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bqatsdk-services</a> &gt; <a href="index.source.html" class="el_package">io.bqat.sdk.services.config</a> &gt; <span class="el_source">OpenApiProperties.java</span></div><h1>OpenApiProperties.java</h1><pre class="source lang-java linenums">package io.bqat.sdk.services.config;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+
+@Configuration
+@ConfigurationProperties(prefix = &quot;openapi&quot;)
+<span class="nc bnc" id="L11" title="All 30 branches missed.">@Data</span>
+public class OpenApiProperties {
+<span class="nc" id="L13">    private InfoProperty info;</span>
+<span class="nc" id="L14">    private Service service;</span>
+<span class="nc" id="L15">    private Group group;</span>
+}
+
+<span class="nc bnc" id="L18" title="All 38 branches missed.">@Data</span>
+class InfoProperty {
+<span class="nc" id="L20">    private String title;</span>
+<span class="nc" id="L21">    private String description;</span>
+<span class="nc" id="L22">    private String version;</span>
+<span class="nc" id="L23">    private LicenseProperty license;</span>
+}
+
+<span class="nc bnc" id="L26" title="All 22 branches missed.">@Data</span>
+class LicenseProperty {
+<span class="nc" id="L28">    private String name;</span>
+<span class="nc" id="L29">    private String url;</span>
+}
+
+<span class="nc bnc" id="L32" title="All 14 branches missed.">@Data</span>
+class Service {
+<span class="nc" id="L34">    private List&lt;Server&gt; servers;</span>
+}
+
+<span class="nc bnc" id="L37" title="All 22 branches missed.">@Data</span>
+class Server {
+<span class="nc" id="L39">    private String description;</span>
+<span class="nc" id="L40">    private String url;</span>
+}
+
+<span class="nc bnc" id="L43" title="All 22 branches missed.">@Data</span>
+class Group {
+<span class="nc" id="L45">    private String name;</span>
+<span class="nc" id="L46">    private List&lt;String&gt; paths;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

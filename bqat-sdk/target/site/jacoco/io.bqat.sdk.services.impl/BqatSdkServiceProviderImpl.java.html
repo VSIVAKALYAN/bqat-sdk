@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BqatSdkServiceProviderImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bqatsdk-services</a> &gt; <a href="index.source.html" class="el_package">io.bqat.sdk.services.impl</a> &gt; <span class="el_source">BqatSdkServiceProviderImpl.java</span></div><h1>BqatSdkServiceProviderImpl.java</h1><pre class="source lang-java linenums">package io.bqat.sdk.services.impl;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import io.bqat.sdk.services.constant.ErrorMessages;
+import io.bqat.sdk.services.dto.RequestDto;
+import io.bqat.sdk.services.dto.request.CheckQualityRequestDto;
+import io.bqat.sdk.services.dto.request.ConvertFormatRequestDto;
+import io.bqat.sdk.services.dto.request.ExtractTemplateRequestDto;
+import io.bqat.sdk.services.dto.request.InitRequestDto;
+import io.bqat.sdk.services.dto.request.MatchRequestDto;
+import io.bqat.sdk.services.dto.request.SegmentRequestDto;
+import io.bqat.sdk.services.exceptions.BqatSdkException;
+import io.bqat.sdk.services.spi.BqatSdkServiceProvider;
+import io.bqat.sdk.services.utils.Utils;
+import io.mosip.kernel.biometrics.model.SDKInfo;
+import io.mosip.kernel.biometrics.model.Response;
+import io.mosip.kernel.biometrics.spi.IBioApiV2;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import static io.bqat.sdk.services.constant.AppConstants.LOGGER_IDTYPE;
+import static io.bqat.sdk.services.constant.AppConstants.LOGGER_SESSIONID;
+
+@Component
+<span class="nc" id="L29">@Slf4j</span>
+<span class="nc" id="L30">public class BqatSdkServiceProviderImpl implements BqatSdkServiceProvider {</span>
+    private static final String BQATSDK_SERVICE_SPEC_VERSION = &quot;1.0&quot;;
+    private static final String BQATSDK_SPEC_VERSION = &quot;0.9&quot;;
+    private static final String publicKey = &quot;&quot;;
+    private static final String privateKey = &quot;&quot;;
+
+    @Autowired
+    private IBioApiV2 iBioApiV2;
+
+    @Autowired
+    private Utils serviceUtil;
+
+<span class="nc" id="L42">    private Gson gson = new GsonBuilder().serializeNulls().create();</span>
+
+    @Override
+    public String getSpecVersion() {
+<span class="nc" id="L46">        return BQATSDK_SERVICE_SPEC_VERSION;</span>
+    }
+
+    @Override
+    public Object init(RequestDto request){
+<span class="nc" id="L51">        SDKInfo sdkInfo = null;</span>
+<span class="nc" id="L52">        String decryptedRequest = decode(request.getRequest());</span>
+<span class="nc" id="L53">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;init: &quot;, &quot;decoding successful&quot;);</span>
+<span class="nc" id="L54">        InitRequestDto initRequestDto = gson.fromJson(decryptedRequest, InitRequestDto.class);</span>
+<span class="nc" id="L55">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;init: &quot;, &quot;json to dto successful&quot;);</span>
+        try {
+<span class="nc" id="L57">            sdkInfo = iBioApiV2.init(initRequestDto.getInitParams());</span>
+<span class="nc" id="L58">        } catch (Exception e){</span>
+<span class="nc" id="L59">            e.printStackTrace();</span>
+<span class="nc" id="L60">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;init: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L61">            throw new BqatSdkException(ErrorMessages.BQAT_SDK_LIB_EXCEPTION.toString(), ErrorMessages.BQAT_SDK_LIB_EXCEPTION.getMessage()+&quot;: &quot;+e.getMessage());</span>
+<span class="nc" id="L62">        }</span>
+<span class="nc" id="L63">        return sdkInfo;</span>
+    }
+
+    @Override
+    public Object checkQuality(RequestDto request) {
+<span class="nc" id="L68">    	Response response = null;</span>
+<span class="nc" id="L69">        String decryptedRequest = decode(request.getRequest());</span>
+<span class="nc" id="L70">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;checkQuality: &quot;, &quot;decoding successful&quot;);</span>
+<span class="nc" id="L71">        CheckQualityRequestDto checkQualityRequestDto = gson.fromJson(decryptedRequest, CheckQualityRequestDto.class);</span>
+<span class="nc" id="L72">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;checkQuality: &quot;, &quot;json to dto successful&quot;);</span>
+        try {
+<span class="nc" id="L74">            response = iBioApiV2.checkQuality(</span>
+<span class="nc" id="L75">                    checkQualityRequestDto.getSample(),</span>
+<span class="nc" id="L76">                    checkQualityRequestDto.getModalitiesToCheck(),</span>
+<span class="nc" id="L77">                    checkQualityRequestDto.getFlags()</span>
+            );
+<span class="nc" id="L79">        } catch (Exception e){</span>
+<span class="nc" id="L80">            e.printStackTrace();</span>
+<span class="nc" id="L81">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;checkQuality: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L82">            throw new BqatSdkException(ErrorMessages.BQAT_SDK_LIB_EXCEPTION.toString(), ErrorMessages.BQAT_SDK_LIB_EXCEPTION.getMessage()+&quot;: &quot;+e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L83">        }</span>
+<span class="nc" id="L84">        return response;</span>
+    }
+
+    @Override
+    public Object match(RequestDto request) {
+<span class="nc" id="L89">    	Response response = null;</span>
+<span class="nc" id="L90">        String decryptedRequest = decode(request.getRequest());</span>
+<span class="nc" id="L91">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE,&quot;match: &quot;, &quot;decoding successful&quot;);</span>
+<span class="nc" id="L92">        MatchRequestDto matchRequestDto = gson.fromJson(decryptedRequest, MatchRequestDto.class);</span>
+<span class="nc" id="L93">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE,&quot;match: &quot;, &quot;json to dto successful&quot;);</span>
+        try {
+<span class="nc" id="L95">            response = iBioApiV2.match(</span>
+<span class="nc" id="L96">                    matchRequestDto.getSample(),</span>
+<span class="nc" id="L97">                    matchRequestDto.getGallery(),</span>
+<span class="nc" id="L98">                    matchRequestDto.getModalitiesToMatch(),</span>
+<span class="nc" id="L99">                    matchRequestDto.getFlags()</span>
+            );
+<span class="nc" id="L101">        } catch (BqatSdkException e){</span>
+<span class="nc" id="L102">            e.printStackTrace();</span>
+<span class="nc" id="L103">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;match: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L104">            throw e;</span>
+<span class="nc" id="L105">        } catch (Exception e){</span>
+<span class="nc" id="L106">            e.printStackTrace();</span>
+<span class="nc" id="L107">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;match: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L108">            throw new BqatSdkException(ErrorMessages.BQAT_SDK_LIB_EXCEPTION.toString(), ErrorMessages.BQAT_SDK_LIB_EXCEPTION.getMessage()+&quot;: &quot;+e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L109">        }</span>
+<span class="nc" id="L110">        return response;</span>
+    }
+
+    @Override
+    public Object extractTemplate(RequestDto request) {
+<span class="nc" id="L115">    	Response response = null;</span>
+<span class="nc" id="L116">        String decryptedRequest = decode(request.getRequest());</span>
+<span class="nc" id="L117">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;extractTemplate: &quot;, &quot;decoding successful&quot;);</span>
+<span class="nc" id="L118">        ExtractTemplateRequestDto extractTemplateRequestDto = gson.fromJson(decryptedRequest, ExtractTemplateRequestDto.class);</span>
+<span class="nc" id="L119">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;extractTemplate: &quot;, &quot;json to dto successful&quot;);</span>
+        try {
+<span class="nc" id="L121">            response = iBioApiV2.extractTemplate(</span>
+<span class="nc" id="L122">                    extractTemplateRequestDto.getSample(),</span>
+<span class="nc" id="L123">                    extractTemplateRequestDto.getModalitiesToExtract(),</span>
+<span class="nc" id="L124">                    extractTemplateRequestDto.getFlags()</span>
+            );
+<span class="nc" id="L126">        } catch (BqatSdkException e){</span>
+<span class="nc" id="L127">            e.printStackTrace();</span>
+<span class="nc" id="L128">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;extractTemplate: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L129">            throw e;</span>
+<span class="nc" id="L130">        } catch (Exception e){</span>
+<span class="nc" id="L131">            e.printStackTrace();</span>
+<span class="nc" id="L132">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;extractTemplate: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L133">            throw new BqatSdkException(ErrorMessages.BQAT_SDK_LIB_EXCEPTION.toString(), ErrorMessages.BQAT_SDK_LIB_EXCEPTION.getMessage()+&quot;: &quot;+e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L134">        }</span>
+<span class="nc" id="L135">        return response;</span>
+    }
+
+    @Override
+    public Object segment(RequestDto request) {
+<span class="nc" id="L140">    	Response response = null;</span>
+<span class="nc" id="L141">        String decryptedRequest = decode(request.getRequest());</span>
+<span class="nc" id="L142">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;segment: &quot;, &quot;decoding successful&quot;);</span>
+<span class="nc" id="L143">        SegmentRequestDto segmentRequestDto = gson.fromJson(decryptedRequest, SegmentRequestDto.class);</span>
+<span class="nc" id="L144">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;segment: &quot;, &quot;json to dto successful&quot;);</span>
+        try {
+<span class="nc" id="L146">            response = iBioApiV2.segment(</span>
+<span class="nc" id="L147">                    segmentRequestDto.getSample(),</span>
+<span class="nc" id="L148">                    segmentRequestDto.getModalitiesToSegment(),</span>
+<span class="nc" id="L149">                    segmentRequestDto.getFlags()</span>
+            );
+<span class="nc" id="L151">        } catch (BqatSdkException e){</span>
+<span class="nc" id="L152">            e.printStackTrace();</span>
+<span class="nc" id="L153">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;segment: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L154">            throw e;</span>
+<span class="nc" id="L155">        } catch (Exception e){</span>
+<span class="nc" id="L156">            e.printStackTrace();</span>
+<span class="nc" id="L157">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;segment: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L158">            throw new BqatSdkException(ErrorMessages.BQAT_SDK_LIB_EXCEPTION.toString(), ErrorMessages.BQAT_SDK_LIB_EXCEPTION.getMessage()+&quot;: &quot;+e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L159">        }</span>
+<span class="nc" id="L160">        return response;</span>
+    }
+
+    @Override
+    public Object convertFormat(RequestDto request) {
+<span class="nc" id="L165">    	Response response = null;</span>
+<span class="nc" id="L166">        String decryptedRequest = decode(request.getRequest());</span>
+<span class="nc" id="L167">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;convertFormat: &quot;, &quot;decoding successful&quot;);</span>
+<span class="nc" id="L168">        ConvertFormatRequestDto convertFormatRequestDto = gson.fromJson(decryptedRequest, ConvertFormatRequestDto.class);</span>
+<span class="nc" id="L169">        log.debug(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;convertFormat: &quot;, &quot;json to dto successful&quot;);</span>
+        try {
+<span class="nc" id="L171">        	response = iBioApiV2.convertFormatV2(</span>
+<span class="nc" id="L172">                    convertFormatRequestDto.getSample(),</span>
+<span class="nc" id="L173">                    convertFormatRequestDto.getSourceFormat(),</span>
+<span class="nc" id="L174">                    convertFormatRequestDto.getTargetFormat(),</span>
+<span class="nc" id="L175">                    convertFormatRequestDto.getSourceParams(),</span>
+<span class="nc" id="L176">                    convertFormatRequestDto.getTargetParams(),</span>
+<span class="nc" id="L177">                    convertFormatRequestDto.getModalitiesToConvert()</span>
+            );
+<span class="nc" id="L179">        } catch (BqatSdkException e){</span>
+<span class="nc" id="L180">            e.printStackTrace();</span>
+<span class="nc" id="L181">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;convertFormat: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L182">            throw e;</span>
+<span class="nc" id="L183">        } catch (Exception e){</span>
+<span class="nc" id="L184">            e.printStackTrace();</span>
+<span class="nc" id="L185">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, &quot;convertFormat: &quot;, e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L186">            throw new BqatSdkException(ErrorMessages.BQAT_SDK_LIB_EXCEPTION.toString(), ErrorMessages.BQAT_SDK_LIB_EXCEPTION.getMessage()+&quot;: &quot;+e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L187">        }</span>
+<span class="nc" id="L188">        return null;</span>
+    }
+
+    private String decode(String data){
+        try {
+<span class="nc" id="L193">            return Utils.base64Decode(data);</span>
+<span class="nc" id="L194">        } catch (Exception e){</span>
+<span class="nc" id="L195">            e.printStackTrace();</span>
+<span class="nc" id="L196">            log.error(LOGGER_SESSIONID, LOGGER_IDTYPE, ErrorMessages.INVALID_REQUEST_BODY.toString(), e.toString()+&quot; &quot;+e.getMessage());</span>
+<span class="nc" id="L197">            throw new BqatSdkException(ErrorMessages.INVALID_REQUEST_BODY.toString(), ErrorMessages.INVALID_REQUEST_BODY.getMessage()+&quot;: &quot;+e.toString()+&quot; &quot;+e.getMessage());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

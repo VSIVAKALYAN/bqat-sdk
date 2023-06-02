@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BqatQualitySdkService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bqatsdk-services</a> &gt; <a href="index.source.html" class="el_package">io.bqat.sdk.services.impl</a> &gt; <span class="el_source">BqatQualitySdkService.java</span></div><h1>BqatQualitySdkService.java</h1><pre class="source lang-java linenums">package io.bqat.sdk.services.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+import io.bqat.sdk.services.constant.ResponseStatus;
+import io.bqat.sdk.services.dto.SettingsDto;
+import io.bqat.sdk.services.exceptions.BqatSdkException;
+import io.bqat.sdk.services.service.CheckQualityService;
+import io.bqat.sdk.services.service.SDKInfoService;
+import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
+import io.mosip.kernel.biometrics.model.MatchDecision;
+import io.mosip.kernel.biometrics.model.QualityCheck;
+import io.mosip.kernel.biometrics.model.Response;
+import io.mosip.kernel.biometrics.model.SDKInfo;
+import io.mosip.kernel.biometrics.spi.IBioApiV2;
+
+/**
+ * The Class BqatQualitySDKService.
+ * 
+ * @author Janardhan B S
+ * 
+ */
+@Primary
+@Component(&quot;BqatQualitySdk&quot;)
+@EnableAutoConfiguration
+<span class="fc" id="L35">public class BqatQualitySdkService implements IBioApiV2 {</span>
+<span class="fc" id="L36">	Logger LOGGER = LoggerFactory.getLogger(BqatQualitySdkService.class);</span>
+
+	private static final String API_VERSION = &quot;0.9&quot;;
+	private static final String SDK_VERSION = &quot;1.0&quot;;
+	private static final String ORGINALIZATION = &quot;BQAT&quot;;
+	private static final String TYPE = &quot;QUALITY&quot;;
+	
+	@Value(&quot;${bqat.jsonkey.finger.quality.score}&quot;)
+	private String getJsonKeyFingerQualityScore;
+
+	@Value(&quot;${bqat.jsonkey.iris.quality.score}&quot;)
+	private String getJsonKeyIrisQualityScore;
+
+	@Value(&quot;${bqat.jsonkey.face.quality.score}&quot;)
+	private String getJsonKeyFaceQualityScore;
+
+	@Value(&quot;${bqat.server.ipaddress}&quot;)
+	private String getServerIpAddress;
+
+	@Value(&quot;${bqat.server.port}&quot;)
+	private String getServerPort;
+
+	@Value(&quot;${bqat.server.path}&quot;)
+	private String getServerPath;
+
+	@Value(&quot;${bqat.content.type}&quot;)
+	private String getContentType;
+
+	@Value(&quot;${bqat.content.charset}&quot;)
+	private String getContentCharset;
+
+	@Value(&quot;${bqat.json.results}&quot;)
+	private String getJsonResults;
+
+	@Override
+	public SDKInfo init(Map&lt;String, String&gt; initParams) {
+		// TODO validate for mandatory initParams
+<span class="nc" id="L73">		SDKInfoService service = new SDKInfoService(API_VERSION, SDK_VERSION, ORGINALIZATION, TYPE);</span>
+<span class="nc" id="L74">		return service.getSDKInfo();</span>
+	}
+
+	@Override
+	public Response&lt;QualityCheck&gt; checkQuality(BiometricRecord sample, List&lt;BiometricType&gt; modalitiesToCheck,
+			Map&lt;String, String&gt; flags) {
+<span class="fc" id="L80">		SettingsDto settingsDto = new SettingsDto(getJsonKeyFingerQualityScore, getJsonKeyIrisQualityScore, getJsonKeyFaceQualityScore, </span>
+				getServerIpAddress, getServerPort, getServerPath, getContentType, getContentCharset, getJsonResults);
+<span class="fc" id="L82">		CheckQualityService service = new CheckQualityService(sample, modalitiesToCheck, flags, settingsDto);</span>
+<span class="fc" id="L83">		return service.getCheckQualityInfo();</span>
+	}
+
+	@Override
+	public Response&lt;MatchDecision[]&gt; match(BiometricRecord sample, BiometricRecord[] gallery,
+			List&lt;BiometricType&gt; modalitiesToMatch, Map&lt;String, String&gt; flags) {
+<span class="nc" id="L89">        throw new BqatSdkException(ResponseStatus.NOT_IMPLEMENTED.getStatusCode() + &quot;&quot;, ResponseStatus.NOT_IMPLEMENTED.getStatusMessage());</span>
+	}
+
+	@Override
+	public Response&lt;BiometricRecord&gt; extractTemplate(BiometricRecord sample, List&lt;BiometricType&gt; modalitiesToExtract,
+			Map&lt;String, String&gt; flags) {
+<span class="nc" id="L95">        throw new BqatSdkException(ResponseStatus.NOT_IMPLEMENTED.getStatusCode() + &quot;&quot;, ResponseStatus.NOT_IMPLEMENTED.getStatusMessage());</span>
+	}
+
+	@Override
+	public Response&lt;BiometricRecord&gt; segment(BiometricRecord sample, List&lt;BiometricType&gt; modalitiesToSegment,
+			Map&lt;String, String&gt; flags) {
+<span class="nc" id="L101">        throw new BqatSdkException(ResponseStatus.NOT_IMPLEMENTED.getStatusCode() + &quot;&quot;, ResponseStatus.NOT_IMPLEMENTED.getStatusMessage());</span>
+	}
+
+	@Override
+	public Response&lt;BiometricRecord&gt; convertFormatV2(BiometricRecord sample, String sourceFormat, String targetFormat,
+			Map&lt;String, String&gt; sourceParams, Map&lt;String, String&gt; targetParams,
+			List&lt;BiometricType&gt; modalitiesToConvert) {
+<span class="nc" id="L108">        throw new BqatSdkException(ResponseStatus.NOT_IMPLEMENTED.getStatusCode() + &quot;&quot;, ResponseStatus.NOT_IMPLEMENTED.getStatusMessage());</span>
+	}
+
+	@Override
+	@Deprecated
+	public BiometricRecord convertFormat(BiometricRecord sample, String sourceFormat, String targetFormat,
+			Map&lt;String, String&gt; sourceParams, Map&lt;String, String&gt; targetParams,
+			List&lt;BiometricType&gt; modalitiesToConvert) {
+<span class="nc" id="L116">        throw new BqatSdkException(ResponseStatus.NOT_IMPLEMENTED.getStatusCode() + &quot;&quot;, ResponseStatus.NOT_IMPLEMENTED.getStatusMessage());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
