@@ -1,9 +1,5 @@
 FROM openjdk:11
 
-ARG bqatsdk_zip_url
-
-ENV bqatsdk_zip_file_path=${bqatsdk_zip_url}
-
 ARG bqatsdk_local_dir=bqatsdk-client
 
 ENV bqatsdk_local_dir_name=${bqatsdk_local_dir}
@@ -34,6 +30,16 @@ ENV spring_config_label_env=${spring_config_label}
 
 # environment variable to pass github branch to pickup configuration from, at docker runtime
 ENV spring_config_url_env=${spring_config_url}
+
+
+# environment variable to pass spring application name, at docker runtime
+ENV spring_application_name_env=${spring_application_name}
+
+# environment variable to pass spring config name, at docker runtime
+ENV spring_cloud_config_name_env=${spring_cloud_config_name}
+
+# environment variable to pass spring context path , at docker runtime
+ENV server_servlet_context_env=${server_servlet_context}
 
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user=mosip
@@ -74,7 +80,7 @@ ADD ./configure_bqatsdk.sh configure_bqatsdk.sh
 
 RUN chmod 775 bqatsdk-services.jar
 
-RUN chmod +x configure_bqatsdk.sh
+#RUN chmod +x configure_bqatsdk.sh
 
 # change permissions of file inside working dir
 RUN chown -R ${container_user}:${container_user} /home/${container_user}
@@ -87,4 +93,4 @@ EXPOSE 8849
 #ENTRYPOINT [ "./configure_bqatsdk.sh" ]
 
 CMD echo $bqatsdk_bioapi_impl ; \
-java -Dloader.path="${loader_path_env}" -Dbqatsdk_bioapi_impl="${bqatsdk_bioapi_impl}" -Dspring.cloud.config.label="${spring_config_label_env}" -Dspring.profiles.active="${active_profile_env}" -Dspring.cloud.config.uri="${spring_config_url_env}"  -jar bqatsdk-services.jar
+java -Dloader.path="${loader_path_env}" -Dbqatsdk_bioapi_impl="${bqatsdk_bioapi_impl}" -Dspring.cloud.config.label="${spring_config_label_env}" -Dspring.profiles.active="${active_profile_env}" -Dspring.cloud.config.uri="${spring_config_url_env}" -Dspring.application.name="${spring_application_name_env}" -Dspring.cloud.config.name=${spring_cloud_config_name_env} -Dserver.servlet.context-path=${server_servlet_context_env} -jar bqatsdk-services.jar

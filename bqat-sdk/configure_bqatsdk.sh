@@ -3,14 +3,14 @@
 # Script to configure the BioSDK
 set -e
 
-echo "starting downloading zip file $bqatsdk_zip_file_path"
+#echo "starting downloading zip file $bqatsdk_zip_file_path"
 
-wget -q --show-progress "$bqatsdk_zip_file_path"
-echo "Downloaded $bqatsdk_zip_file_path"
+#wget -q --show-progress "$bqatsdk_zip_file_path"
+#echo "Downloaded $bqatsdk_zip_file_path"
 
-FILE_NAME=${bqatsdk_zip_file_path##*/}
+#FILE_NAME=${bqatsdk_zip_file_path##*/}
 
-echo $FILE_NAME
+#echo $FILE_NAME
 
 DIR_NAME=$bqatsdk_local_dir_name
 
@@ -30,11 +30,11 @@ DIR_NAME=$bqatsdk_local_dir_name
 #  unzip -d "$DIR_NAME" $FILE_NAME
 #fi
 
-unzip -d "$DIR_NAME" $FILE_NAME
+#unzip -d "$DIR_NAME" $FILE_NAME
 
-echo "Copying to loader path"
-cp -R ./$DIR_NAME/* $loader_path_env
-echo "Complete"
+#echo "Copying to loader path"
+#cp -R ./$DIR_NAME/* $loader_path_env
+#echo "Complete"
 cd $work_dir
 
 
